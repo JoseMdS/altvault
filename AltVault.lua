@@ -2,7 +2,7 @@
 -- Data lives in AltVaultDB (account-wide SavedVariables). Use the sync script
 -- (AltVault/sync/altvault-sync.lua) to share data between two accounts.
 
-local ADDON = ...
+local ADDON, ns = ...
 local DB
 local playerKey
 local bankOpen = false
@@ -41,8 +41,8 @@ else
   for i = 1, (NUM_BANKBAGSLOTS or 7) do table.insert(BANK, (NUM_BAG_SLOTS or 4) + i) end
 end
 
-local LOCATIONS = { "bags", "bank", "equipped" }
-local LOCATION_LABEL = { bags = "bags", bank = "bank", equipped = "worn" }
+local LOCATIONS = { "bags", "bank", "mail", "equipped" }
+local LOCATION_LABEL = { bags = "bags", bank = "bank", mail = "mail", equipped = "worn" }
 
 ------------------------------------------------------------------------
 -- Formatting
@@ -269,7 +269,7 @@ local function ShowCharacters()
   local total = 0
   for key, c in pairs(DB.chars) do
     table.insert(keys, key)
-    total = total + (c.money or 0)
+    total = total + (c.money or 0) + (c.mailMoney or 0)
   end
   table.sort(keys, function(a, b) return (DB.chars[a].money or 0) > (DB.chars[b].money or 0) end)
   local lines = { "|cffffffffAll characters: " .. Money(total) .. "|r", " " }
@@ -277,8 +277,10 @@ local function ShowCharacters()
     local c = DB.chars[key]
     table.insert(lines, string.format("%s |cffaaaaaa(%s%s)|r", ClassColored(c, key),
       c.level and ("lvl " .. c.level) or "?", c.account and (", " .. c.account) or ""))
-    table.insert(lines, string.format("      %s   |cff888888bags %s, bank %s|r", Money(c.money),
-      Ago(c.updated), c.bankUpdated and Ago(c.bankUpdated) or "not seen - visit a bank"))
+    table.insert(lines, string.format("      %s%s   |cff888888bags %s, bank %s, mail %s|r", Money(c.money),
+      (c.mailMoney or 0) > 0 and ("  |cff888888+ in mail|r " .. Money(c.mailMoney)) or "",
+      Ago(c.updated), c.bankUpdated and Ago(c.bankUpdated) or "not seen - visit a bank",
+      c.mailUpdated and Ago(c.mailUpdated) or "not seen - visit a mailbox"))
   end
   SetBody(table.concat(lines, "\n"))
 end
@@ -329,7 +331,7 @@ local function CreateWindow()
   frame.scroll, frame.child, frame.body = scroll, child, body
 end
 
-local function OpenWindow(query)
+local function OpenWindow(query, characters)
   if not frame then CreateWindow() end
   frame:Show()
   if query and query ~= "" then
@@ -337,8 +339,23 @@ local function OpenWindow(query)
   else
     frame.box:SetText("")
     ShowCharacters()
-    frame.box:SetFocus()
+    if not characters then frame.box:SetFocus() end
   end
+end
+
+-- Shared with Mail.lua, Minimap.lua and Crafting.lua
+ns.GetDB = function() return DB end
+ns.PlayerKey = function() return playerKey end
+ns.Me = Me
+ns.Remember = Remember
+ns.WhoHas = WhoHas
+ns.Money = Money
+ns.ClassColored = ClassColored
+ns.ShortName = ShortName
+ns.LocationLabel = function(where) return LOCATION_LABEL[where] or where end
+ns.OpenWindow = OpenWindow
+ns.ToggleWindow = function()
+  if frame and frame:IsShown() then frame:Hide() else OpenWindow("") end
 end
 
 ------------------------------------------------------------------------
@@ -357,8 +374,13 @@ SlashCmdList.ALTVAULT = function(msg)
     else
       print("|cff33ff99AltVault|r: no character named '" .. rest .. "' (use Name-Realm, see /vault)")
     end
+  elseif cmd == "minimap" and rest == "" then
+    ns.ToggleMinimapButton()
+  elseif cmd == "crafting" and rest == "" then
+    ns.ToggleCraftingPanel()
   elseif cmd == "help" then
     print("|cff33ff99AltVault|r: /vault - open window | /vault <item> - search | /vault delete Name-Realm")
+    print("|cff33ff99AltVault|r: /vault minimap - hide/show minimap button | /vault crafting - reagent panel on/off")
   elseif frame and frame:IsShown() and msg == "" then
     frame:Hide()
   else
@@ -402,6 +424,7 @@ ev:SetScript("OnEvent", function(_, event, arg1)
   elseif event == "PLAYER_LOGIN" then
     playerKey = UnitName("player") .. "-" .. GetRealmName()
     HookTooltips()
+    ns.UpdateMinimapButton()
     C_Timer.After(3, ScanBags)
   elseif not playerKey then
     return

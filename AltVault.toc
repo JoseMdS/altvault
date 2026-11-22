@@ -1,8 +1,11 @@
 ## Interface: 16001
 ## Title: AltVault
-## Notes: Search bags, bank and gold across all your characters (and both accounts with the sync script).
+## Notes: Search bags, bank, mail and gold across all your characters (and both accounts with the sync script).
 ## Author: jose
-## Version: 1.0.0
+## Version: 1.1.0
 ## SavedVariables: AltVaultDB
 
 AltVault.lua
+Mail.lua
+Minimap.lua
+Crafting.lua
