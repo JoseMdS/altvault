@@ -22,3 +22,7 @@ SavedVariables are per account, so each account only sees its own characters. Th
 - run `lua sync/altvault-sync.lua "/Applications/World of Warcraft/_forever_"`
 
 Requires `lua` (e.g. `brew install lua`).
+
+## Dokumentation
+
+Design (LLD), beslut (ADR) och krav finns i [`docs/`](docs/index.md) och i [issues](https://github.com/JoseMdS/altvault/issues). Arbetssättet beskrivs i [dev-portal](https://github.com/JoseMdS/dev-portal).
