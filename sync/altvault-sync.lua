@@ -48,12 +48,13 @@ local function load(file)
 end
 
 local merged = { chars = {}, items = {}, version = 1 }
-local found = {}
+local found, perAccount = {}, {}
 for _, acc in ipairs(accounts) do
   local file = accountDir .. "/" .. acc .. "/SavedVariables/AltVault.lua"
   local db = load(file)
   if db then
     found[acc] = file
+    perAccount[acc] = db
     for id, link in pairs(db.items or {}) do merged.items[id] = link end
     for key, c in pairs(db.chars or {}) do
       local cur = merged.chars[key]
@@ -90,10 +91,16 @@ local function ser(v, indent, out)
   else out[#out + 1] = "nil" end
 end
 
-local out = { "\nAltVaultDB = " }
-ser(merged, "", out)
-out[#out + 1] = "\n"
-local text = table.concat(out)
+-- Each account keeps its own settings (minimap button, crafting panel); only characters and items are shared.
+local function TextFor(acc)
+  local db = {}
+  for k, v in pairs(perAccount[acc] or {}) do db[k] = v end
+  db.chars, db.items, db.version = merged.chars, merged.items, merged.version
+  local out = { "\nAltVaultDB = " }
+  ser(db, "", out)
+  out[#out + 1] = "\n"
+  return table.concat(out)
+end
 
 local n = 0
 for _ in pairs(merged.chars) do n = n + 1 end
@@ -102,7 +109,7 @@ for _, acc in ipairs(accounts) do
   local file = accountDir .. "/" .. acc .. "/SavedVariables/AltVault.lua"
   if found[acc] then os.execute("cp " .. q(file) .. " " .. q(file .. ".sync-backup")) end
   local f = assert(io.open(file, "w"))
-  f:write(text)
+  f:write(TextFor(acc))
   f:close()
   print(("  %s: wrote %d characters"):format(acc, n))
 end
