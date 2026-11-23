@@ -1,0 +1,28 @@
+site_name: "AltVault"
+site_description: "Addon för WoW Forever som söker i väskor, bank och guld för alla karaktärer, även över två konton med synkskriptet."
+repo_url: https://github.com/JoseMdS/altvault
+edit_uri: edit/main/docs/
+
+# techdocs-core ger samma bygge i Backstage TechDocs och på GitHub Pages (tema: Material).
+plugins:
+  - techdocs-core
+
+markdown_extensions:
+  - meta
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Start: index.md
+  - LLD: lld.md
+  - Beslut (ADR):
+      - adr/index.md
+      - ADR-0001 Levande dokumentation: adr/0001-levande-dokumentation.md
+      - ADR-0002 Kontosynk med ett skript utanför spelet: adr/0002-synk-utanfor-spelet.md
+  - Krav: krav.md
+  - HLD: hld.md
+  - SAD: sad.md
+  - Ordlista: ordlista.md

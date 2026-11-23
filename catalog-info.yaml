@@ -1,0 +1,20 @@
+# Registreras i Backstage via dev-portal/catalog/all.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: altvault
+  title: "AltVault"
+  description: "Addon för WoW Forever som söker i väskor, bank och guld för alla karaktärer, även över två konton med synkskriptet."
+  annotations:
+    github.com/project-slug: JoseMdS/altvault
+    backstage.io/techdocs-ref: dir:.
+  tags: [lua, wow-addon, wow-forever]
+  links:
+    - url: https://github.com/JoseMdS/altvault/issues
+      title: Krav och user stories
+      icon: docs
+spec:
+  type: library
+  lifecycle: production
+  owner: user:josemds
+  system: forever-addons
